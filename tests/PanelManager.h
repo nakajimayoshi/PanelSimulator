@@ -31,31 +31,31 @@ public:
         const std::string subdivider = "}{";
         switch (control.name) {
             case AUX_PFD:
-                return "AUX_PFD" + std::to_string(aux_pfd.getData()) + subdivider;
+                return "AUX_PFD" + std::to_string(aux_pfd.getData());
             case PFD:
-                return "PFD" + std::to_string(pfd.getData()) + subdivider;
+                return "PFD" + std::to_string(pfd.getData());
             case HALF_PFD:
-                return "HALF_PFD" + std::to_string(pfd_half.getData()) + subdivider;
+                return "HALF_PFD" + std::to_string(pfd_half.getData());
             case EICAS:
-                return "EICAS" + std::to_string(eicas.getData()) + subdivider;
+                return "EICAS" + std::to_string(eicas.getData());
             case ND:
-                return "ND" + std::to_string(nd.getData()) + subdivider;
+                return "ND" + std::to_string(nd.getData());
             case HALF_ND:
-                return "HALF_ND" + std::to_string(nd_half.getData()) + subdivider;
+                return "HALF_ND" + std::to_string(nd_half.getData());
             case SYS:
-                return "SYS" + std::to_string(sys.getData()) + subdivider;
+                return "SYS" + std::to_string(sys.getData());
             case CDU:
-                return "CDU" + std::to_string(cdu.getData()) + subdivider;
+                return "CDU" + std::to_string(cdu.getData());
             case INFO:
-                return "INFO" + std::to_string(info.getData()) + subdivider;
+                return "INFO" + std::to_string(info.getData());
             case CHKL:
-                return "CHKL" + std::to_string(chkl.getData()) + subdivider;
+                return "CHKL" + std::to_string(chkl.getData());
             case COMM:
-                return "COMM" + std::to_string(comm.getData()) + subdivider;
+                return "COMM" + std::to_string(comm.getData());
             default:
-                std::cout << "display failure" << subdivider;
+                return "display failure";
         }
-    }
+    };
 
    std::deque<Control> masterControls[5] = {
             {aux_pfd, pfd},
@@ -75,9 +75,21 @@ public:
 };
 
 std::string PanelManager::test() {
+    std::string result = "";
     for(auto & masterControl : masterControls) {
+        result.append("--[[");
+        result.append("{");
         for(auto & j : masterControl) {
-            return print(j);
+            result += print(j) + "}{";
         }
+        result.pop_back();
+        result.append("]]--");
     }
+    for(int i = 0; i < 2; i++) {
+        result.pop_back();
+        result.pop_back();
+        std::reverse(result.begin(), result.end());
+    };
+
+    return result;
 }

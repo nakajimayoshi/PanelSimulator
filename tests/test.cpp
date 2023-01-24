@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "PanelManager.h"
 #include <memory>
+#include <string>
 
 TEST(Base_case, default_state_data_reachable_and_unique) {
     PanelManager p;
@@ -55,23 +56,32 @@ TEST(setData, setData_works_as_intended) {
 
 TEST(PanelManagerPrintMethod, print_method_works_as_intended) {
     PanelManager p;
-    ASSERT_EQ(p.print(p.pfd), "PFD1}{");
-    ASSERT_EQ(p.print(p.nd), "ND2}{");
-    ASSERT_EQ(p.print(p.pfd_half), "HALF_PFD3}{");
-    ASSERT_EQ(p.print(p.nd_half), "HALF_ND4}{");
-    ASSERT_EQ(p.print(p.aux_pfd), "AUX_PFD5}{");
-    ASSERT_EQ(p.print(p.cdu), "CDU6}{");
-    ASSERT_EQ(p.print(p.sys), "SYS7}{");
-    ASSERT_EQ(p.print(p.chkl), "CHKL8}{");
-    ASSERT_EQ(p.print(p.comm), "COMM9}{");
-    ASSERT_EQ(p.print(p.eicas), "EICAS10}{");
-    ASSERT_EQ(p.print(p.info), "INFO11}{");
+    ASSERT_EQ(p.print(p.pfd), "PFD1");
+    ASSERT_EQ(p.print(p.nd), "ND2");
+    ASSERT_EQ(p.print(p.pfd_half), "HALF_PFD3");
+    ASSERT_EQ(p.print(p.nd_half), "HALF_ND4");
+    ASSERT_EQ(p.print(p.aux_pfd), "AUX_PFD5");
+    ASSERT_EQ(p.print(p.cdu), "CDU6");
+    ASSERT_EQ(p.print(p.sys), "SYS7");
+    ASSERT_EQ(p.print(p.chkl), "CHKL8");
+    ASSERT_EQ(p.print(p.comm), "COMM9");
+    ASSERT_EQ(p.print(p.eicas), "EICAS10");
+    ASSERT_EQ(p.print(p.info), "INFO11");
 }
 
 TEST(PanelManagerDefaultMasterControls, Default_Master_test) {
     PanelManager p;
-    ASSERT_EQ(p.test(), "2");
+    std::string default_output = "[[{AUX_PFD5}{PFD1}]]----"
+                                 "[[{HALF_ND4}{EICAS10}]]----"
+                                 "[[{CDU6}{CDU6}]]----"
+                                 "[[{ND2}]]----"
+                                 "[[{PFD1}{AUX_PFD5}]]";
+
+    ASSERT_EQ(p.test(), default_output);
 }
 
 
+TEST(EICASSwitcher, pop_returns_expected_value) {
+    PanelManager p;
 
+}

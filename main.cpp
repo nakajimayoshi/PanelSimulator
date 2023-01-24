@@ -162,7 +162,7 @@ void Panels::selectPage(Control control) {
 };
 
 int main() {
-//    Panels p;
-//    p.test();
+
+    std::cout << "Hello" << std::endl;
 
 };
