@@ -81,7 +81,9 @@ TEST(PanelManagerDefaultMasterControls, Default_Master_test) {
 }
 
 
-TEST(EICASSwitcher, pop_returns_expected_value) {
+TEST(EICASSwitcher, eicas_method_from_default_state) {
     PanelManager p;
-
+    auto expected = "[[{AUX_PFD5}{PFD1}]]----[[{ND2}]]----[[{CDU6}{CDU6}]]----[[{HALF_ND4}{EICAS10}]]----[[{PFD1}{AUX_PFD5}]]";
+    p.switchEICAS();
+    ASSERT_EQ(p.test(), expected);
 }
