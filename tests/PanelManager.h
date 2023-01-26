@@ -8,12 +8,11 @@
 #include <iostream>
 #include "Control.h"
 #include "string"
+#include <unordered_map>
 
 class PanelManager {
 private:
     int selectedPanel = 1;
-
-
 
 public:
     PanelManager() = default;
@@ -60,19 +59,13 @@ public:
     Control eicas = Control(EICAS, 10);
     Control info = Control(INFO, 11);
 
-    std::deque<Control> masterControls[5] = {
-            {aux_pfd, pfd},
-            {nd_half, eicas},
-            {cdu, cdu},
-            {nd},
-            {pfd, aux_pfd}
+    std::unordered_map<int, std::deque<Control>> masterControls = {
+            {0, {aux_pfd, pfd}},
+            {1, {nd_half, eicas}},
+            {2, {cdu, cdu}},
+            {3, {nd}},
+            {4, {pfd, aux_pfd}},
     };
-
-    std::deque<Control> leftIOurBoardDisplay = masterControls[0];
-    std::deque<Control> leftInboardDisplay = masterControls[1];
-    std::deque<Control> centerDisplay = masterControls[2];
-    std::deque<Control> rightInboardDisplay = masterControls[3];
-    std::deque<Control> rightOutBoardDisplay = masterControls[4];
 
     void selectLPanel();
     void selectRPanel();
@@ -83,47 +76,38 @@ public:
 };
 
 void PanelManager::switchEICAS() {
+    auto &leftInboardDisplay = masterControls[1];
+    auto &rightInboardDisplay = masterControls[3];
 
-    if(rightInboardDisplay[0].name == ND && leftInboardDisplay[0].name == HALF_ND) {
-        this->rightInboardDisplay.pop_back();
-        this->rightInboardDisplay.push_back(eicas);
-        this->rightInboardDisplay.push_back(nd_half);
-        this->leftInboardDisplay.clear();
-        this->leftInboardDisplay.push_back(nd);
-    }
-
-    if(leftInboardDisplay[1].name == ND && rightInboardDisplay[0].name == HALF_ND) {
-        this->leftInboardDisplay.pop_back();
-        this->leftInboardDisplay.push_back(nd_half);
-        this->leftInboardDisplay.push_back(eicas);
-        this->rightInboardDisplay.clear();
-        this->rightInboardDisplay.push_back(nd);
-    }
-
-    if(this->leftInboardDisplay.size() == 2 && this->rightInboardDisplay.size() == 2) {
-          if(this->rightInboardDisplay[0].name == EICAS) {
-              this->rightInboardDisplay.pop_front();
-              this->rightInboardDisplay.emplace_front(leftInboardDisplay[1]);
-              this->leftInboardDisplay.pop_back();
-              this->leftInboardDisplay.push_back(eicas);
-          }
-
-        if(this->leftInboardDisplay[0].name == EICAS) {
-            this->leftInboardDisplay.pop_front();
-            this->leftInboardDisplay.emplace_front(rightInboardDisplay[0]);
-            this->leftInboardDisplay.pop_back();
-            this->leftInboardDisplay.push_back(eicas);
+    if (leftInboardDisplay.front().name == ND || rightInboardDisplay.front().name == ND) {
+        if (leftInboardDisplay.front().name == ND) {
+            leftInboardDisplay.clear();
+            leftInboardDisplay.push_back(nd_half);
+            leftInboardDisplay.push_back(eicas);
+            rightInboardDisplay.clear();
+            rightInboardDisplay.push_back(nd);
+        } else {
+            rightInboardDisplay.clear();
+            rightInboardDisplay.push_back(eicas);
+            rightInboardDisplay.push_back(nd_half);
+            leftInboardDisplay.clear();
+            leftInboardDisplay.push_back(nd);
         }
-    };
+
+
+    }
+
+    return;
 }
 
 std::string PanelManager::test() {
-    std::string result = "";
-    for(auto & masterControl : masterControls) {
+    std::string result;
+    auto& panels = masterControls;
+    for(int i = 0; i < panels.size(); i++) {
         result.append("--[[");
         result.append("{");
-        for(auto & j : masterControl) {
-            result += print(j) + "}{";
+        for(int j = 0; j < panels[i].size(); j++) {
+            result += print(panels[i][j]) + "}{";
         }
         result.pop_back();
         result.append("]]--");

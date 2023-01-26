@@ -18,6 +18,8 @@ public:
 
     auto getData() -> int;
     auto setData(int x) -> void;
+
+    Control(std::deque<Control> deque1);
 };
 
 auto Control::getData() -> int {
@@ -26,4 +28,8 @@ auto Control::getData() -> int {
 
 auto Control::setData(int x) -> void {
     this->data = data + 1;
+}
+
+Control::Control(std::deque<Control> deque1) {
+
 }
