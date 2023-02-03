@@ -16,13 +16,12 @@ public:
     }
     ControlName name;
 
-    auto getData() -> int;
+    [[nodiscard]] auto getData() const -> int;
     auto setData(int x) -> void;
 
-    Control(std::deque<Control> deque1);
 };
 
-auto Control::getData() -> int {
+auto Control::getData() const -> int {
     return this->data;
 }
 
@@ -30,6 +29,3 @@ auto Control::setData(int x) -> void {
     this->data = data + 1;
 }
 
-Control::Control(std::deque<Control> deque1) {
-
-}

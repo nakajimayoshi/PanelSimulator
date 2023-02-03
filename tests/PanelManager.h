@@ -18,53 +18,53 @@ public:
     PanelManager() = default;
     ~PanelManager() = default;
 
-    auto print(Control& control) -> std::string {
-        switch (control.name) {
+    auto print(std::shared_ptr<Control>& control) -> std::string {
+        switch (control->name) {
             case AUX_PFD:
-                return "AUX_PFD" + std::to_string(aux_pfd.getData());
+                return "AUX_PFD" + std::to_string(aux_pfd->getData());
             case PFD:
-                return "PFD" + std::to_string(pfd.getData());
+                return "PFD" + std::to_string(pfd->getData());
             case HALF_PFD:
-                return "HALF_PFD" + std::to_string(pfd_half.getData());
+                return "HALF_PFD" + std::to_string(pfd_half->getData());
             case EICAS:
-                return "EICAS" + std::to_string(eicas.getData());
+                return "EICAS" + std::to_string(eicas->getData());
             case ND:
-                return "ND" + std::to_string(nd.getData());
+                return "ND" + std::to_string(nd->getData());
             case HALF_ND:
-                return "HALF_ND" + std::to_string(nd_half.getData());
+                return "HALF_ND" + std::to_string(nd_half->getData());
             case SYS:
-                return "SYS" + std::to_string(sys.getData());
+                return "SYS" + std::to_string(sys->getData());
             case CDU:
-                return "CDU" + std::to_string(cdu.getData());
+                return "CDU" + std::to_string(cdu->getData());
             case INFO:
-                return "INFO" + std::to_string(info.getData());
+                return "INFO" + std::to_string(info->getData());
             case CHKL:
-                return "CHKL" + std::to_string(chkl.getData());
+                return "CHKL" + std::to_string(chkl->getData());
             case COMM:
-                return "COMM" + std::to_string(comm.getData());
+                return "COMM" + std::to_string(comm->getData());
             default:
                 return "display failure";
         }
     };
 
-    Control pfd = Control(PFD, 1);
-    Control nd = Control(ND, 2);
-    Control pfd_half = Control(HALF_PFD, 3);
-    Control nd_half = Control(HALF_ND, 4);
-    Control aux_pfd = Control(AUX_PFD, 5);
-    Control cdu = Control(CDU, 6);
-    Control sys = Control(SYS, 7);
-    Control chkl = Control(CHKL, 8);
-    Control comm = Control(COMM, 9);
-    Control eicas = Control(EICAS, 10);
-    Control info = Control(INFO, 11);
+    std::shared_ptr<Control> pfd = std::make_shared<Control>(PFD, 1);
+    std::shared_ptr<Control> nd = std::make_shared<Control>(ND, 2);
+    std::shared_ptr<Control> pfd_half = std::make_shared<Control>(HALF_PFD, 3);
+    std::shared_ptr<Control> nd_half = std::make_shared<Control>(HALF_ND, 4);
+    std::shared_ptr<Control> aux_pfd = std::make_shared<Control>(AUX_PFD, 5);
+    std::shared_ptr<Control> cdu = std::make_shared<Control>(CDU, 6);
+    std::shared_ptr<Control> sys = std::make_shared<Control>(SYS, 7);
+    std::shared_ptr<Control> chkl = std::make_shared<Control>(CHKL, 8);
+    std::shared_ptr<Control> comm = std::make_shared<Control>(COMM, 9);
+    std::shared_ptr<Control> eicas = std::make_shared<Control>(EICAS, 10);
+    std::shared_ptr<Control> info = std::make_shared<Control>(INFO, 11);
 
-    std::unordered_map<int, std::deque<Control>> masterControls = {
-            {0, {aux_pfd, pfd}},
-            {1, {nd_half, eicas}},
-            {2, {cdu, cdu}},
-            {3, {nd}},
-            {4, {pfd, aux_pfd}},
+    std::deque<std::shared_ptr<Control>> masterControls[5] = {
+            {aux_pfd, pfd},
+            {nd_half, eicas},
+            {cdu, cdu},
+            {nd},
+            {pfd, aux_pfd}
     };
 
 
@@ -73,7 +73,7 @@ public:
     int getSelectedPanel();
     std::string log();
     void switchEICAS();
-    void selectPage(Control control);
+    void selectPage(const std::shared_ptr<Control>& control);
     void selectCDUPage(Control control);
 
 };
@@ -82,14 +82,14 @@ void PanelManager::switchEICAS() {
     auto &leftInboardDisplay = masterControls[1];
     auto &rightInboardDisplay = masterControls[3];
 
-    if (leftInboardDisplay.front().name == ND || rightInboardDisplay.front().name == ND) {
-        if (leftInboardDisplay.front().name == ND) {
+    if (leftInboardDisplay.front()->name == ND || rightInboardDisplay.front()->name == ND) {
+        if (leftInboardDisplay.front()->name == ND) {
             leftInboardDisplay.clear();
             leftInboardDisplay.push_back(nd_half);
             leftInboardDisplay.push_back(eicas);
             rightInboardDisplay.clear();
             rightInboardDisplay.push_back(nd);
-        } else if(rightInboardDisplay.front().name == ND) {
+        } else if(rightInboardDisplay.front()->name == ND) {
             rightInboardDisplay.clear();
             rightInboardDisplay.push_back(eicas);
             rightInboardDisplay.push_back(nd_half);
@@ -97,7 +97,7 @@ void PanelManager::switchEICAS() {
             leftInboardDisplay.push_back(nd);
             }
         } else {
-        if(leftInboardDisplay.back().name == EICAS) {
+        if(leftInboardDisplay.back()->name == EICAS) {
             leftInboardDisplay.pop_back();
             leftInboardDisplay.push_back(rightInboardDisplay.front());
             rightInboardDisplay.pop_front();
@@ -111,24 +111,24 @@ void PanelManager::switchEICAS() {
     }
 }
 
-void PanelManager::selectPage(Control control) {
+void PanelManager::selectPage(const std::shared_ptr<Control>& control) {
 
     auto& leftInboardDisplay = masterControls[1];
     auto& rightInboardDisplay = masterControls[3];
 
-    if(this->selectedPanel == 1 && leftInboardDisplay.front().name == ND) {
+    if(this->selectedPanel == 1 && leftInboardDisplay.front()->name == ND) {
         leftInboardDisplay.pop_front();
         leftInboardDisplay.push_front(nd_half);
         leftInboardDisplay.push_back(control);
-    } else if(this->selectedPanel == 1 && leftInboardDisplay.back().name == EICAS) {
+    } else if(this->selectedPanel == 1 && leftInboardDisplay.back()->name == EICAS) {
         leftInboardDisplay.pop_front();
         leftInboardDisplay.push_front(control);
 
-    } else if (this->selectedPanel == 3 && rightInboardDisplay.front().name == ND) {
+    } else if (this->selectedPanel == 3 && rightInboardDisplay.front()->name == ND) {
         rightInboardDisplay.pop_front();
         rightInboardDisplay.push_front(control);
         rightInboardDisplay.push_back(nd_half);
-    } else if (this->selectedPanel == 3 && rightInboardDisplay.front().name == EICAS) {
+    } else if (this->selectedPanel == 3 && rightInboardDisplay.front()->name == EICAS) {
         rightInboardDisplay.pop_back();
         rightInboardDisplay.push_back(control);
     }
@@ -153,7 +153,7 @@ int PanelManager::getSelectedPanel() {
 std::string PanelManager::log() {
     std::string result;
     auto& panels = masterControls;
-    for(int i = 0; i < panels.size(); i++) {
+    for(int i = 0; i < panels->size(); i++) {
         result.append("--[[");
         result.append("{");
         for(int j = 0; j < panels[i].size(); j++) {
