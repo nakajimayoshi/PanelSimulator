@@ -67,11 +67,14 @@ public:
             {4, {pfd, aux_pfd}},
     };
 
+
     void selectLPanel();
     void selectRPanel();
-    std::string test();
+    int getSelectedPanel();
+    std::string log();
     void switchEICAS();
     void selectPage(Control control);
+    void selectCDUPage(Control control);
 
 };
 
@@ -86,21 +89,68 @@ void PanelManager::switchEICAS() {
             leftInboardDisplay.push_back(eicas);
             rightInboardDisplay.clear();
             rightInboardDisplay.push_back(nd);
-        } else {
+        } else if(rightInboardDisplay.front().name == ND) {
             rightInboardDisplay.clear();
             rightInboardDisplay.push_back(eicas);
             rightInboardDisplay.push_back(nd_half);
             leftInboardDisplay.clear();
             leftInboardDisplay.push_back(nd);
+            }
+        } else {
+        if(leftInboardDisplay.back().name == EICAS) {
+            leftInboardDisplay.pop_back();
+            leftInboardDisplay.push_back(rightInboardDisplay.front());
+            rightInboardDisplay.pop_front();
+            rightInboardDisplay.push_front(eicas);
+        } else {
+            rightInboardDisplay.pop_front();
+            rightInboardDisplay.push_front(leftInboardDisplay.back());
+            leftInboardDisplay.pop_back();
+            leftInboardDisplay.push_back(eicas);
         }
-
-
     }
-
-    return;
 }
 
-std::string PanelManager::test() {
+void PanelManager::selectPage(Control control) {
+
+    auto& leftInboardDisplay = masterControls[1];
+    auto& rightInboardDisplay = masterControls[3];
+
+    if(this->selectedPanel == 1 && leftInboardDisplay.front().name == ND) {
+        leftInboardDisplay.pop_front();
+        leftInboardDisplay.push_front(nd_half);
+        leftInboardDisplay.push_back(control);
+    } else if(this->selectedPanel == 1 && leftInboardDisplay.back().name == EICAS) {
+        leftInboardDisplay.pop_front();
+        leftInboardDisplay.push_front(control);
+
+    } else if (this->selectedPanel == 3 && rightInboardDisplay.front().name == ND) {
+        rightInboardDisplay.pop_front();
+        rightInboardDisplay.push_front(control);
+        rightInboardDisplay.push_back(nd_half);
+    } else if (this->selectedPanel == 3 && rightInboardDisplay.front().name == EICAS) {
+        rightInboardDisplay.pop_back();
+        rightInboardDisplay.push_back(control);
+    }
+}
+
+void PanelManager::selectCDUPage(Control control) {
+
+}
+
+void PanelManager::selectLPanel() {
+    this->selectedPanel = 1;
+}
+
+void PanelManager::selectRPanel() {
+    this->selectedPanel = 3;
+}
+
+int PanelManager::getSelectedPanel() {
+    return this->selectedPanel;
+}
+
+std::string PanelManager::log() {
     std::string result;
     auto& panels = masterControls;
     for(int i = 0; i < panels.size(); i++) {

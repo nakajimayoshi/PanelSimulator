@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include "PanelManager.h"
 #include <memory>
-#include <string>
 
 TEST(Base_case, default_state_data_reachable_and_unique) {
     PanelManager p;
@@ -77,15 +76,31 @@ TEST(PanelManagerDefaultMasterControls, Default_Master_test) {
                                  "[[{ND2}]]----"
                                  "[[{PFD1}{AUX_PFD5}]]";
 
-    ASSERT_EQ(p.test(), default_output);
+    ASSERT_EQ(p.log(), default_output);
 }
 
-
-TEST(EICASSwitcher, eicas_method_from_default_state) {
+TEST(PanelSelection, select_r_and_l_panels_works) {
     PanelManager p;
-    auto expected_once = "[[{AUX_PFD5}{PFD1}]]----[[{ND2}]]----[[{CDU6}{CDU6}]]----[[{EICAS10}{HALF_ND4}]]----[[{PFD1}{AUX_PFD5}]]";
+    ASSERT_EQ(p.getSelectedPanel(), 1);
+
+    p.selectRPanel();
+    ASSERT_EQ(p.getSelectedPanel(), 3);
+
+    p.selectLPanel();
+    ASSERT_EQ(p.getSelectedPanel(), 1);
+}
+
+TEST(EICASSwitcher, eicas_method_with_half_nd) {
+    PanelManager p;
+    auto expected_once = "[[{AUX_PFD5}{PFD1}]]----"
+                         "[[{ND2}]]----"
+                         "[[{CDU6}{CDU6}]]----"
+                         "[[{EICAS10}{HALF_ND4}]]----"
+                         "[[{PFD1}{AUX_PFD5}]]";
+
     p.switchEICAS();
-    ASSERT_EQ(p.test(), expected_once);
+    ASSERT_EQ(p.log(), expected_once);
+
 
     auto expected_twice = "[[{AUX_PFD5}{PFD1}]]----"
                           "[[{HALF_ND4}{EICAS10}]]----"
@@ -94,10 +109,44 @@ TEST(EICASSwitcher, eicas_method_from_default_state) {
                           "[[{PFD1}{AUX_PFD5}]]";
 
     p.switchEICAS();
-    ASSERT_EQ(p.test(), expected_twice);
+    ASSERT_EQ(p.log(), expected_twice);
+
+    p.switchEICAS();
+    ASSERT_EQ(p.log(), expected_once);
 }
 
-TEST(EICASSwitcher, eicas_method_from_non_default_state) {
+TEST(SelectPage, select_page_method_works) {
+    PanelManager p;
 
+    ASSERT_EQ(p.getSelectedPanel(), 1);
+
+    p.selectPage(p.sys);
+
+    auto expected =  "[[{AUX_PFD5}{PFD1}]]----"
+                     "[[{SYS7}{EICAS10}]]----"
+                     "[[{CDU6}{CDU6}]]----"
+                     "[[{ND2}]]----"
+                     "[[{PFD1}{AUX_PFD5}]]";
+
+    ASSERT_EQ(p.log(), expected);
+
+    p.selectPage(p.comm);
+    expected = "[[{AUX_PFD5}{PFD1}]]----"
+               "[[{COMM9}{EICAS10}]]----"
+               "[[{CDU6}{CDU6}]]----"
+               "[[{ND2}]]----"
+               "[[{PFD1}{AUX_PFD5}]]";
+
+    ASSERT_EQ(p.log(), expected);
+
+    p.switchEICAS();
+
+    expected = "[[{AUX_PFD5}{PFD1}]]----"
+               "[[{COMM9}{HALF_ND4}]]----"
+               "[[{CDU6}{CDU6}]]----"
+               "[[{EICAS10}{HALF_ND4}]]----"
+               "[[{PFD1}{AUX_PFD5}]]";
+
+    ASSERT_EQ(p.log(), expected);
 
 }
