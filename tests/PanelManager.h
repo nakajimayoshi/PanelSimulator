@@ -3,16 +3,25 @@
 
 #endif //UNTITLED1_PANELMANAGER_H
 
+// FCOM 10.20.2
+// Multiple display instances managed in 3 ways:
+// Synchronized (Changes on one affect the other)
+// Independent (no linkage of state)
+// Blank (when max allowed instances is exceeded, display becomes blank with "Select MFD"
 
 #include <deque>
 #include <iostream>
 #include "Control.h"
 #include "string"
 #include <unordered_map>
+#include "ControlSelection.h"
 
 class PanelManager {
 private:
-    int selectedPanel = 1;
+    ControlSelection captSelectedControl = LEFT;
+    ControlSelection foSelectedControl = RIGHT;
+    std::shared_ptr<Control> captStoredControl = null_control;
+    std::shared_ptr<Control> foStoredControl = null_control;
 
 public:
     PanelManager() = default;
@@ -42,122 +51,122 @@ public:
                 return "CHKL" + std::to_string(chkl->getData());
             case COMM:
                 return "COMM" + std::to_string(comm->getData());
+            case SELECT_MFD:
+                return "SELECT MFD" + std::to_string(blank->getData());
+            case NULLCTRL:
+                return "NULL CONTROL" + std::to_string(null_control->getData());
             default:
                 return "display failure";
         }
     };
 
-    std::shared_ptr<Control> pfd = std::make_shared<Control>(PFD, 1);
-    std::shared_ptr<Control> nd = std::make_shared<Control>(ND, 2);
-    std::shared_ptr<Control> pfd_half = std::make_shared<Control>(HALF_PFD, 3);
-    std::shared_ptr<Control> nd_half = std::make_shared<Control>(HALF_ND, 4);
-    std::shared_ptr<Control> aux_pfd = std::make_shared<Control>(AUX_PFD, 5);
-    std::shared_ptr<Control> cdu = std::make_shared<Control>(CDU, 6);
-    std::shared_ptr<Control> sys = std::make_shared<Control>(SYS, 7);
-    std::shared_ptr<Control> chkl = std::make_shared<Control>(CHKL, 8);
-    std::shared_ptr<Control> comm = std::make_shared<Control>(COMM, 9);
-    std::shared_ptr<Control> eicas = std::make_shared<Control>(EICAS, 10);
-    std::shared_ptr<Control> info = std::make_shared<Control>(INFO, 11);
+    std::shared_ptr<Control> pfd = std::make_shared<Control>(PFD, 1, SYNCHRONOUS);
+    std::shared_ptr<Control> nd = std::make_shared<Control>(ND, 2, INDEPENDENT);
+    std::shared_ptr<Control> pfd_half = std::make_shared<Control>(HALF_PFD, 3, SYNCHRONOUS);
+    std::shared_ptr<Control> nd_half = std::make_shared<Control>(HALF_ND, 4, INDEPENDENT);
+    std::shared_ptr<Control> aux_pfd = std::make_shared<Control>(AUX_PFD, 5, SYNCHRONOUS);
+    std::shared_ptr<Control> cdu = std::make_shared<Control>(CDU, 6, INDEPENDENT);
+    std::shared_ptr<Control> sys = std::make_shared<Control>(SYS, 7, INDEPENDENT);
+    std::shared_ptr<Control> chkl = std::make_shared<Control>(CHKL, 8, SYNCHRONOUS);
+    std::shared_ptr<Control> comm = std::make_shared<Control>(COMM, 9, INDEPENDENT);
+    std::shared_ptr<Control> eicas = std::make_shared<Control>(EICAS, 10, SYNCHRONOUS);
+    std::shared_ptr<Control> info = std::make_shared<Control>(INFO, 11, INDEPENDENT);
+    std::shared_ptr<Control> blank = std::make_shared<Control>(SELECT_MFD, 12, BLANK);
+    std::shared_ptr<Control> null_control = std::make_shared<Control>(NULLCTRL, 0, BLANK);
 
     std::deque<std::shared_ptr<Control>> masterControls[5] = {
             {aux_pfd, pfd},
             {nd_half, eicas},
             {cdu, cdu},
-            {nd},
+            {null_control, nd},
             {pfd, aux_pfd}
     };
 
+    std::deque<std::shared_ptr<Control>> leftOutboardDisplay = masterControls[0];
+    std::deque<std::shared_ptr<Control>> leftInboardDisplay = masterControls[1];
+    std::deque<std::shared_ptr<Control>> cduDisplay = masterControls[2];
+    std::deque<std::shared_ptr<Control>> rightInboardDisplay = masterControls[3];
+    std::deque<std::shared_ptr<Control>> rightOutboardDisplay = masterControls[4];
 
-    void selectLPanel();
-    void selectRPanel();
-    int getSelectedPanel();
+    void captSelectLControl();
+    void captSelectRControl();
+    void foSelectLControl();
+    void foSelectRControl();
+    ControlSelection getCaptSelectedControl();
+    ControlSelection getFoSelectedControl();
     std::string log();
     void switchEICAS();
-    void selectPage(const std::shared_ptr<Control>& control);
-    void selectCDUPage(Control control);
+    void captSelectPage(const std::shared_ptr<Control>& control);
+    void foSelectPage(const std::shared_ptr<Control>& control);
+    void captSelectCDUPage(const std::shared_ptr<Control>& control);
+    void foSelectCDUPage(const std::shared_ptr<Control>& control);
 
 };
 
 void PanelManager::switchEICAS() {
-    auto &leftInboardDisplay = masterControls[1];
-    auto &rightInboardDisplay = masterControls[3];
 
-    if (leftInboardDisplay.front()->name == ND || rightInboardDisplay.front()->name == ND) {
-        if (leftInboardDisplay.front()->name == ND) {
-            leftInboardDisplay.clear();
-            leftInboardDisplay.push_back(nd_half);
-            leftInboardDisplay.push_back(eicas);
-            rightInboardDisplay.clear();
-            rightInboardDisplay.push_back(nd);
-        } else if(rightInboardDisplay.front()->name == ND) {
-            rightInboardDisplay.clear();
-            rightInboardDisplay.push_back(eicas);
-            rightInboardDisplay.push_back(nd_half);
-            leftInboardDisplay.clear();
-            leftInboardDisplay.push_back(nd);
+};
+
+void PanelManager::captSelectPage(const std::shared_ptr<Control>& control) {
+
+
+    switch(captSelectedControl) {
+        case 0:
+            leftInboardDisplay.pop_front();
+            leftInboardDisplay.push_front(control);
+
+        case 1:
+            if(leftInboardDisplay[captSelectedControl]->name == EICAS) {
+
             }
-        } else {
-        if(leftInboardDisplay.back()->name == EICAS) {
-            leftInboardDisplay.pop_back();
-            leftInboardDisplay.push_back(rightInboardDisplay.front());
-            rightInboardDisplay.pop_front();
-            rightInboardDisplay.push_front(eicas);
-        } else {
-            rightInboardDisplay.pop_front();
-            rightInboardDisplay.push_front(leftInboardDisplay.back());
-            leftInboardDisplay.pop_back();
-            leftInboardDisplay.push_back(eicas);
+    };
+
+}
+
+void PanelManager::captSelectCDUPage(const std::shared_ptr<Control>& control) {
+
+}
+
+void PanelManager::captSelectLControl() {
+        this->captSelectedControl = LEFT;
+}
+
+void PanelManager::captSelectRControl() {
+    if(leftInboardDisplay.back()->name == EICAS) {
+        throw std::runtime_error("error: EICAS occupies selected control");
+    } else {
+        this->captSelectedControl = RIGHT;
+    }
+}
+
+ControlSelection PanelManager::getCaptSelectedControl() {
+    return this->captSelectedControl;
+}
+
+void PanelManager::foSelectLControl() {
+    if(rightInboardDisplay.front()->name != EICAS) {
+        this->foSelectedControl = LEFT;
+    } else {
+        throw std::runtime_error("error: EICAS occupies selected control");
         }
-    }
 }
 
-void PanelManager::selectPage(const std::shared_ptr<Control>& control) {
-
-    auto& leftInboardDisplay = masterControls[1];
-    auto& rightInboardDisplay = masterControls[3];
-
-    if(this->selectedPanel == 1 && leftInboardDisplay.front()->name == ND) {
-        leftInboardDisplay.pop_front();
-        leftInboardDisplay.push_front(nd_half);
-        leftInboardDisplay.push_back(control);
-    } else if(this->selectedPanel == 1 && leftInboardDisplay.back()->name == EICAS) {
-        leftInboardDisplay.pop_front();
-        leftInboardDisplay.push_front(control);
-
-    } else if (this->selectedPanel == 3 && rightInboardDisplay.front()->name == ND) {
-        rightInboardDisplay.pop_front();
-        rightInboardDisplay.push_front(control);
-        rightInboardDisplay.push_back(nd_half);
-    } else if (this->selectedPanel == 3 && rightInboardDisplay.front()->name == EICAS) {
-        rightInboardDisplay.pop_back();
-        rightInboardDisplay.push_back(control);
-    }
+void PanelManager::foSelectRControl() {
+    this->foSelectedControl = RIGHT;
 }
 
-void PanelManager::selectCDUPage(Control control) {
-
-}
-
-void PanelManager::selectLPanel() {
-    this->selectedPanel = 1;
-}
-
-void PanelManager::selectRPanel() {
-    this->selectedPanel = 3;
-}
-
-int PanelManager::getSelectedPanel() {
-    return this->selectedPanel;
+ControlSelection PanelManager::getFoSelectedControl() {
+    return this->foSelectedControl;
 }
 
 std::string PanelManager::log() {
     std::string result;
-    auto& panels = masterControls;
-    for(int i = 0; i < panels->size(); i++) {
+    auto& panels = reinterpret_cast<const std::array<std::deque<std::shared_ptr<Control>>, 5> &>(masterControls);
+    for(const auto & panel : panels) {
         result.append("--[[");
         result.append("{");
-        for(int j = 0; j < panels[i].size(); j++) {
-            result += print(panels[i][j]) + "}{";
+        for(auto& j : panel) {
+            result += print(const_cast<std::shared_ptr<Control> &>(j)) + "}{";
         }
         result.pop_back();
         result.append("]]--");

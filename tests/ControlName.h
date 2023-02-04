@@ -16,4 +16,6 @@ enum ControlName {
     INFO,
     CHKL,
     COMM,
+    SELECT_MFD,
+    NULLCTRL
 };
